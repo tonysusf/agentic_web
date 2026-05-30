@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
@@ -19,6 +19,7 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  isTyping?: boolean;
 };
 
 async function submitPrompt(prompt: string) {
@@ -52,6 +53,38 @@ function AssistantLogo() {
       <span>agentic</span>
       <em>Lite</em>
     </div>
+  );
+}
+
+function TypingMessage({
+  text,
+  onComplete
+}: {
+  text: string;
+  onComplete: () => void;
+}) {
+  const [visibleText, setVisibleText] = useState("");
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const intervalId = window.setInterval(() => {
+      currentIndex += 1;
+      setVisibleText(text.slice(0, currentIndex));
+
+      if (currentIndex >= text.length) {
+        window.clearInterval(intervalId);
+        onComplete();
+      }
+    }, 18);
+
+    return () => window.clearInterval(intervalId);
+  }, [onComplete, text]);
+
+  return (
+    <p>
+      {visibleText}
+      <span className="typing-caret" aria-hidden="true" />
+    </p>
   );
 }
 
@@ -105,7 +138,8 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: data.result
+        content: data.result,
+        isTyping: true
       };
       setMessages((currentMessages) => {
         return [...currentMessages, assistantMessage];
@@ -182,10 +216,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
               <span>New task</span>
             </button>
             <button type="button">
-              <Sparkles size={18} />
-              <span>Agent</span>
-            </button>
-            <button type="button">
               <Library size={18} />
               <span>Library</span>
             </button>
@@ -203,7 +233,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
         <section className="chat-main" aria-label="Chat">
           <header className="chat-header">
             <h1>Agentic Lite</h1>
-            <button type="button">Share</button>
           </header>
 
           <div className="messages">
@@ -218,7 +247,20 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
             {messages.map((message) => (
               <article className={`message message-${message.role}`} key={message.id}>
                 {message.role === "user" ? <p className="message-role">You</p> : <AssistantLogo />}
-                <p>{message.content}</p>
+                {message.isTyping ? (
+                  <TypingMessage
+                    text={message.content}
+                    onComplete={() =>
+                      setMessages((currentMessages) =>
+                        currentMessages.map((currentMessage) =>
+                          currentMessage.id === message.id ? { ...currentMessage, isTyping: false } : currentMessage
+                        )
+                      )
+                    }
+                  />
+                ) : (
+                  <p>{message.content}</p>
+                )}
               </article>
             ))}
 

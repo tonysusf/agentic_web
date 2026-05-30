@@ -160,6 +160,21 @@ textarea {
   cursor: pointer;
 }
 
+.page-shell .composer {
+  min-height: 76px;
+  padding: 10px 14px 10px;
+  border-radius: 24px;
+}
+
+.page-shell .composer textarea {
+  min-height: 24px;
+}
+
+.page-shell .round-control {
+  width: 36px;
+  height: 36px;
+}
+
 .submit-control {
   color: #aaa9a5;
   background: #ededeb;
@@ -232,8 +247,7 @@ textarea {
 }
 
 .sidebar-nav button,
-.task-list button,
-.chat-header button {
+.task-list button {
   font: inherit;
   cursor: pointer;
 }
@@ -305,16 +319,6 @@ textarea {
   color: #2f2d29;
   font-size: 18px;
   font-weight: 720;
-}
-
-.chat-header button {
-  min-height: 34px;
-  padding: 0 14px;
-  color: #3b3934;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 14px;
 }
 
 .messages {
@@ -391,6 +395,22 @@ textarea {
   color: #9f2d2d;
 }
 
+.typing-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: #363431;
+  animation: blink 0.9s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 .empty-chat {
   display: grid;
   min-height: 44vh;
@@ -419,15 +439,15 @@ textarea {
 }
 
 .chat-composer .composer {
-  width: min(100%, 840px);
-  min-height: 72px;
+  width: min(100%, 700px);
+  min-height: 58px;
   margin: 0 auto;
-  padding: 12px 14px 10px;
-  border-radius: 20px;
+  padding: 8px 12px;
+  border-radius: 18px;
 }
 
 .chat-composer .composer textarea {
-  min-height: 30px;
+  min-height: 24px;
   font-size: 15px;
 }
 
@@ -552,7 +572,7 @@ textarea {
   }
 
   .chat-composer .composer {
-    min-height: 70px;
+    min-height: 58px;
   }
 
 }
