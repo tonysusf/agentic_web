@@ -144,7 +144,7 @@ textarea {
 .composer-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 
 .round-control {
@@ -165,6 +165,230 @@ textarea {
   background: #ededeb;
   border-color: transparent;
   box-shadow: none;
+}
+
+.submit-control-active {
+  color: #ffffff;
+  background: #171715;
+  cursor: pointer;
+}
+
+.submit-control:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.result-panel {
+  margin: 18px auto 0;
+  padding: 16px 18px;
+  color: #3f3c37;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 16px 42px rgba(46, 45, 42, 0.06);
+}
+
+.result-panel p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.result-label {
+  margin-bottom: 6px !important;
+  color: #77746e;
+  font-size: 12px !important;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.chat-shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 280px minmax(0, 1fr);
+  background: #f8f8f6;
+}
+
+.chat-sidebar {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 22px;
+  padding: 18px 14px;
+  background: #eeeeec;
+  border-right: 1px solid #deded9;
+}
+
+.sidebar-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-nav button,
+.task-list button,
+.chat-header button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.sidebar-nav button,
+.active-task {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  color: #383631;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.sidebar-nav button:hover,
+.active-task {
+  background: #dededb;
+}
+
+.task-list {
+  display: grid;
+  gap: 8px;
+}
+
+.task-list p {
+  margin: 0;
+  padding: 0 10px;
+  color: #85827c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.active-task span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-main {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr auto;
+  background: #fbfbfa;
+}
+
+.chat-header {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid #ecece8;
+}
+
+.chat-header h1 {
+  margin: 0;
+  color: #2f2d29;
+  font-size: 18px;
+  font-weight: 720;
+}
+
+.chat-header button {
+  min-height: 34px;
+  padding: 0 14px;
+  color: #3b3934;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.messages {
+  width: min(100%, 840px);
+  margin: 0 auto;
+  padding: 42px 24px 28px;
+}
+
+.message {
+  margin-bottom: 22px;
+  color: #373530;
+  font-size: 16px;
+  line-height: 1.62;
+}
+
+.message p {
+  margin: 0;
+}
+
+.message-role {
+  margin-bottom: 6px !important;
+  color: #8a867f;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.message-user {
+  margin-left: auto;
+  max-width: 680px;
+  padding: 14px 16px;
+  background: #f1f1ee;
+  border-radius: 16px;
+}
+
+.message-assistant,
+.message-error {
+  max-width: 760px;
+}
+
+.message-error {
+  color: #9f2d2d;
+}
+
+.empty-chat {
+  display: grid;
+  min-height: 44vh;
+  place-content: center;
+  color: #6f6b65;
+  text-align: center;
+}
+
+.empty-chat h2 {
+  margin: 0 0 10px;
+  color: #34322e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 500;
+}
+
+.empty-chat p {
+  margin: 0;
+}
+
+.chat-composer {
+  position: sticky;
+  bottom: 0;
+  padding: 18px 24px 24px;
+  background: linear-gradient(to top, #fbfbfa 78%, rgba(251, 251, 250, 0));
+}
+
+.chat-composer .composer {
+  width: min(100%, 840px);
+  min-height: 112px;
+  margin: 0 auto;
+  border-radius: 24px;
+}
+
+.chat-composer .composer textarea {
+  min-height: 42px;
 }
 
 .quick-actions {
@@ -280,6 +504,44 @@ textarea {
   .round-control {
     width: 42px;
     height: 42px;
+  }
+
+  .result-panel {
+    margin-top: 14px;
+    border-radius: 16px;
+  }
+
+  .result-panel p {
+    font-size: 14px;
+  }
+
+  .chat-shell {
+    display: block;
+  }
+
+  .chat-sidebar {
+    display: none;
+  }
+
+  .chat-header {
+    min-height: 54px;
+    padding: 0 16px;
+  }
+
+  .messages {
+    padding: 28px 16px 20px;
+  }
+
+  .message {
+    font-size: 15px;
+  }
+
+  .chat-composer {
+    padding: 14px 12px 16px;
+  }
+
+  .chat-composer .composer {
+    min-height: 104px;
   }
 
   .quick-actions {

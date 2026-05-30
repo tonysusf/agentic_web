@@ -3,13 +3,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("http://agentic.im996.com"),
-  title: "Agentic",
+  title: "Agentic Lite",
   description: "Agentic AI task assistant mockup for web and mobile.",
   openGraph: {
-    title: "Agentic",
+    title: "Agentic Lite",
     description: "Assign a task or ask anything.",
     url: "http://agentic.im996.com",
-    siteName: "Agentic",
+    siteName: "Agentic Lite",
     type: "website"
   }
 };
