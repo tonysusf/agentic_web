@@ -314,6 +314,10 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
 
         </div>
       </section>
+
+      <footer className="site-footer">
+        <span>Agentic Lite</span>
+      </footer>
     </main>
   );
 }

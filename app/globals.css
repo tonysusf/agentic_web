@@ -112,6 +112,17 @@ textarea {
   text-align: center;
 }
 
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #8a867f;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
 .composer {
   display: flex;
   min-height: 96px;
