@@ -4,11 +4,7 @@ import { useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
-  Briefcase,
-  Code2,
   Library,
-  Laptop,
-  Paintbrush2,
   Plus,
   Search,
   Sparkles
@@ -24,14 +20,6 @@ type Message = {
   role: "user" | "assistant";
   content: string;
 };
-
-const quickActions = [
-  { label: "Create slides", icon: Briefcase },
-  { label: "Build website", icon: Code2 },
-  { label: "Develop desktop apps", icon: Laptop },
-  { label: "Design", icon: Paintbrush2 },
-  { label: "More" }
-];
 
 async function submitPrompt(prompt: string) {
   const response = await fetch("/api/prompt", {
@@ -138,11 +126,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
       event.preventDefault();
       formRef.current?.requestSubmit();
     }
-  }
-
-  function handleExample(label: string) {
-    setPrompt(label);
-    setError("");
   }
 
   function handleNewTask() {
@@ -287,14 +270,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
             </section>
           )}
 
-          <div className="quick-actions" aria-label="Example tasks">
-            {quickActions.map(({ label, icon: Icon }) => (
-              <button type="button" className="quick-chip" key={label} onClick={() => handleExample(label)}>
-                {Icon ? <Icon size={18} strokeWidth={2.1} aria-hidden="true" /> : null}
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </section>
     </main>

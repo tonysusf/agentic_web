@@ -431,35 +431,6 @@ textarea {
   font-size: 15px;
 }
 
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.quick-chip {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  color: #3f3c37;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: 0 1px 8px rgba(52, 49, 44, 0.04);
-  cursor: pointer;
-  font-size: clamp(13px, 0.98vw, 16px);
-  font-weight: 610;
-}
-
-.quick-chip svg {
-  color: #85827c;
-  flex: 0 0 auto;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -584,25 +555,6 @@ textarea {
     min-height: 70px;
   }
 
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .quick-chip {
-    min-height: 44px;
-    justify-content: center;
-    gap: 9px;
-    padding: 0 13px;
-    font-size: 13px;
-  }
-
-  .quick-chip:nth-child(3) {
-    grid-column: 1 / -1;
-  }
-
 }
 
 @media (max-width: 420px) {
@@ -618,7 +570,4 @@ textarea {
     font-size: 28px;
   }
 
-  .quick-chip {
-    font-size: 12px;
-  }
 }
