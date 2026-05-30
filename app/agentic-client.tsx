@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   ArrowUp,
@@ -33,12 +32,6 @@ const quickActions = [
   { label: "Design", icon: Paintbrush2 },
   { label: "More" }
 ];
-
-const CHAT_STORAGE_KEY = "agentic-lite-chat";
-
-function persistMessages(messages: Message[]) {
-  window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
-}
 
 async function submitPrompt(prompt: string) {
   const response = await fetch("/api/prompt", {
@@ -79,26 +72,8 @@ type AgenticClientProps = {
 };
 
 export default function AgenticClient({ initialChatOpen = false }: AgenticClientProps) {
-  const router = useRouter();
   const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (!initialChatOpen || typeof window === "undefined") {
-      return [];
-    }
-
-    const storedMessages = window.localStorage.getItem(CHAT_STORAGE_KEY);
-
-    if (!storedMessages) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(storedMessages) as Message[];
-    } catch {
-      window.localStorage.removeItem(CHAT_STORAGE_KEY);
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
@@ -120,7 +95,7 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     setError("");
     setIsChatOpen(true);
     if (!isChatOpen) {
-      router.push("/chat");
+      window.history.pushState(null, "", "/chat");
     }
     setPrompt("");
     const conversationId = conversationRef.current;
@@ -132,7 +107,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     };
 
     const messagesWithUser = [...messages, userMessage];
-    persistMessages(messagesWithUser);
     setMessages(messagesWithUser);
 
     try {
@@ -146,9 +120,7 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
         content: data.result
       };
       setMessages((currentMessages) => {
-        const nextMessages = [...currentMessages, assistantMessage];
-        persistMessages(nextMessages);
-        return nextMessages;
+        return [...currentMessages, assistantMessage];
       });
     } catch (caughtError) {
       if (conversationRef.current === conversationId) {
@@ -180,8 +152,7 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     setError("");
     setIsSubmitting(false);
     setIsChatOpen(true);
-    persistMessages([]);
-    router.push("/chat");
+    window.history.pushState(null, "", "/chat");
   }
 
   const composer = (
@@ -215,10 +186,10 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
       <main className="chat-shell">
         <aside className="chat-sidebar" aria-label="Workspace navigation">
           <div className="sidebar-brand-row">
-            <Link className="brand" href="/" aria-label="Agentic home">
+            <div className="brand" aria-label="Agentic Lite">
               <AgenticMark />
               <span>agentic</span>
-            </Link>
+            </div>
             <Search size={18} strokeWidth={2.1} />
           </div>
 

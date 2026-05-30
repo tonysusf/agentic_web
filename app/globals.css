@@ -99,7 +99,7 @@ textarea {
 }
 
 .hero-inner {
-  width: min(100%, 1228px);
+  width: min(100%, 860px);
 }
 
 .hero h1 {
@@ -114,10 +114,10 @@ textarea {
 
 .composer {
   display: flex;
-  min-height: 164px;
+  min-height: 96px;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px 20px 18px;
+  padding: 16px 18px 14px;
   background: var(--control);
   border: 2px solid #e2e4e6;
   border-radius: 28px;
@@ -126,7 +126,7 @@ textarea {
 
 .composer textarea {
   width: 100%;
-  min-height: 76px;
+  min-height: 32px;
   resize: none;
   color: var(--ink);
   background: transparent;
@@ -414,19 +414,21 @@ textarea {
 .chat-composer {
   position: sticky;
   bottom: 0;
-  padding: 18px 24px 24px;
+  padding: 14px 24px 18px;
   background: linear-gradient(to top, #fbfbfa 78%, rgba(251, 251, 250, 0));
 }
 
 .chat-composer .composer {
   width: min(100%, 840px);
-  min-height: 112px;
+  min-height: 72px;
   margin: 0 auto;
-  border-radius: 24px;
+  padding: 12px 14px 10px;
+  border-radius: 20px;
 }
 
 .chat-composer .composer textarea {
-  min-height: 42px;
+  min-height: 30px;
+  font-size: 15px;
 }
 
 .quick-actions {
@@ -534,8 +536,8 @@ textarea {
   }
 
   .composer {
-    min-height: 154px;
-    padding: 18px 16px 14px;
+    min-height: 92px;
+    padding: 14px 16px 12px;
     border-radius: 22px;
   }
 
@@ -575,11 +577,11 @@ textarea {
   }
 
   .chat-composer {
-    padding: 14px 12px 16px;
+    padding: 12px 12px 14px;
   }
 
   .chat-composer .composer {
-    min-height: 104px;
+    min-height: 70px;
   }
 
   .quick-actions {
