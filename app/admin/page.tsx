@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MarkdownText } from "../components/markdown-text";
 
 type AdminSession = {
@@ -20,6 +20,7 @@ type AdminMessage = {
 
 const ADMIN_USER = "admin";
 const ADMIN_PASSWORD = "admin";
+const ADMIN_SESSION_KEY = "agentic-lite-admin-session";
 
 function getAdminHeaders(username: string, password: string) {
   return {
@@ -38,13 +39,13 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function loadSessions() {
+  async function loadSessions(credentials = { username, password }) {
     setIsLoading(true);
     setError("");
 
     try {
       const response = await fetch("/api/admin", {
-        headers: getAdminHeaders(username, password)
+        headers: getAdminHeaders(credentials.username, credentials.password)
       });
       const data = (await response.json()) as { sessions?: AdminSession[]; error?: string };
 
@@ -57,10 +58,36 @@ export default function AdminPage() {
       setMessages([]);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not load sessions.");
+      window.localStorage.removeItem(ADMIN_SESSION_KEY);
+      setIsLoggedIn(false);
     } finally {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    window.setTimeout(() => {
+      const savedSession = window.localStorage.getItem(ADMIN_SESSION_KEY);
+
+      if (!savedSession) {
+        return;
+      }
+
+      try {
+        const credentials = JSON.parse(savedSession) as { username?: string; password?: string };
+
+        if (credentials.username === ADMIN_USER && credentials.password === ADMIN_PASSWORD) {
+          setUsername(credentials.username);
+          setPassword(credentials.password);
+          setIsLoggedIn(true);
+          void loadSessions({ username: credentials.username, password: credentials.password });
+        }
+      } catch {
+        window.localStorage.removeItem(ADMIN_SESSION_KEY);
+      }
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,6 +98,7 @@ export default function AdminPage() {
     }
 
     setIsLoggedIn(true);
+    window.localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ username, password }));
     await loadSessions();
   }
 
@@ -124,7 +152,7 @@ export default function AdminPage() {
           <h1>Chat History</h1>
           <p>Viewing saved chat messages by browser session.</p>
         </div>
-        <button type="button" onClick={loadSessions} disabled={isLoading}>
+        <button type="button" onClick={() => loadSessions()} disabled={isLoading}>
           Refresh
         </button>
       </header>
