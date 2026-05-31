@@ -14,3 +14,11 @@ Open `http://localhost:3000`.
 ## Vercel
 
 Deploy the repository as a Next.js project, then add `agentic.im996.com` in Vercel project domains and point DNS to Vercel as instructed.
+
+Required environment variables:
+
+```bash
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=openai/gpt-oss-120b:free
+OPENROUTER_SITE_URL=http://agentic.im996.com
+```
