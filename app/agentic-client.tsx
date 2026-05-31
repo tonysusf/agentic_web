@@ -54,7 +54,7 @@ async function submitPrompt(prompt: string, sessionId: string) {
   });
 
   if (!response.ok) {
-    throw new Error("The fake backend could not process that prompt.");
+    throw new Error("Agentic Lite could not process that prompt.");
   }
 
   return (await response.json()) as ApiResponse;
@@ -345,7 +345,7 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
             {isSubmitting && (
               <article className="message message-assistant">
                 <AssistantLogo />
-                <p>Working on a fake backend response...</p>
+                <p>Thinking through your request...</p>
               </article>
             )}
 
