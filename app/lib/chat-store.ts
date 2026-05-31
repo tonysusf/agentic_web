@@ -106,14 +106,3 @@ export async function countUserMessagesToday(sessionId: string) {
 
   return rows[0]?.count || 0;
 }
-
-export async function clearMessages(sessionId: string) {
-  await ensureChatSchema();
-
-  const sql = getSql();
-
-  await sql`
-    DELETE FROM chat_messages
-    WHERE session_id = ${sessionId}
-  `;
-}

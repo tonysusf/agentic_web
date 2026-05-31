@@ -70,12 +70,6 @@ async function loadHistory(sessionId: string) {
   return (await response.json()) as HistoryResponse;
 }
 
-async function clearHistory(sessionId: string) {
-  await fetch(`/api/history?sessionId=${encodeURIComponent(sessionId)}`, {
-    method: "DELETE"
-  });
-}
-
 function AgenticMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
@@ -252,7 +246,6 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     window.history.pushState(null, "", "/chat");
     const currentSessionId = sessionId || getOrCreateSessionId();
     setSessionId(currentSessionId);
-    void clearHistory(currentSessionId);
   }
 
   const composer = (
