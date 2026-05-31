@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { saveMessage } from "../../lib/chat-store";
 
 type OpenRouterResponse = {
   choices?: Array<{
@@ -15,13 +16,18 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "openai/gpt-oss-120b:free";
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { prompt?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { prompt?: unknown; sessionId?: unknown } | null;
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
+  const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
 
   if (!prompt) {
     return NextResponse.json({ error: "Prompt is required." }, { status: 400 });
+  }
+
+  if (!sessionId) {
+    return NextResponse.json({ error: "sessionId is required." }, { status: 400 });
   }
 
   if (!apiKey) {
@@ -71,6 +77,19 @@ export async function POST(request: Request) {
   if (!result) {
     return NextResponse.json({ error: "OpenRouter returned an empty response." }, { status: 502 });
   }
+
+  await saveMessage({
+    id: crypto.randomUUID(),
+    sessionId,
+    role: "user",
+    content: prompt
+  });
+  await saveMessage({
+    id: crypto.randomUUID(),
+    sessionId,
+    role: "assistant",
+    content: result
+  });
 
   return NextResponse.json({
     prompt,

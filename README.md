@@ -18,6 +18,7 @@ Deploy the repository as a Next.js project, then add `agentic.im996.com` in Verc
 Required environment variables:
 
 ```bash
+DATABASE_URL=...
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=openai/gpt-oss-120b:free
 OPENROUTER_SITE_URL=http://agentic.im996.com

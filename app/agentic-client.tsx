@@ -22,13 +22,35 @@ type Message = {
   isTyping?: boolean;
 };
 
-async function submitPrompt(prompt: string) {
+type HistoryResponse = {
+  messages: Array<{
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+  }>;
+};
+
+const SESSION_STORAGE_KEY = "agentic-lite-session-id";
+
+function getOrCreateSessionId() {
+  const existingSessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
+
+  if (existingSessionId) {
+    return existingSessionId;
+  }
+
+  const sessionId = crypto.randomUUID();
+  window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+  return sessionId;
+}
+
+async function submitPrompt(prompt: string, sessionId: string) {
   const response = await fetch("/api/prompt", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ prompt })
+    body: JSON.stringify({ prompt, sessionId })
   });
 
   if (!response.ok) {
@@ -36,6 +58,22 @@ async function submitPrompt(prompt: string) {
   }
 
   return (await response.json()) as ApiResponse;
+}
+
+async function loadHistory(sessionId: string) {
+  const response = await fetch(`/api/history?sessionId=${encodeURIComponent(sessionId)}`);
+
+  if (!response.ok) {
+    throw new Error("Could not load chat history.");
+  }
+
+  return (await response.json()) as HistoryResponse;
+}
+
+async function clearHistory(sessionId: string) {
+  await fetch(`/api/history?sessionId=${encodeURIComponent(sessionId)}`, {
+    method: "DELETE"
+  });
 }
 
 function AgenticMark() {
@@ -118,9 +156,29 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
+  const [sessionId, setSessionId] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const conversationRef = useRef(0);
   const canSubmit = prompt.trim().length > 0 && !isSubmitting;
+
+  useEffect(() => {
+    window.setTimeout(() => {
+      const currentSessionId = getOrCreateSessionId();
+      setSessionId(currentSessionId);
+
+      if (!initialChatOpen) {
+        return;
+      }
+
+      loadHistory(currentSessionId)
+        .then((data) => {
+          setMessages(data.messages);
+        })
+        .catch((caughtError) => {
+          setError(caughtError instanceof Error ? caughtError.message : "Could not load chat history.");
+        });
+    }, 0);
+  }, [initialChatOpen]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,6 +198,8 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     }
     setPrompt("");
     const conversationId = conversationRef.current;
+    const currentSessionId = sessionId || getOrCreateSessionId();
+    setSessionId(currentSessionId);
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -151,7 +211,7 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     setMessages(messagesWithUser);
 
     try {
-      const data = await submitPrompt(trimmedPrompt);
+      const data = await submitPrompt(trimmedPrompt, currentSessionId);
       if (conversationRef.current !== conversationId) {
         return;
       }
@@ -190,6 +250,9 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     setIsSubmitting(false);
     setIsChatOpen(true);
     window.history.pushState(null, "", "/chat");
+    const currentSessionId = sessionId || getOrCreateSessionId();
+    setSessionId(currentSessionId);
+    void clearHistory(currentSessionId);
   }
 
   const composer = (
