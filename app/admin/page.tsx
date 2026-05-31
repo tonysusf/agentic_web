@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MarkdownText } from "../components/markdown-text";
 
 type AdminSession = {
   sessionId: string;
@@ -156,7 +157,9 @@ export default function AdminPage() {
                 <strong>{message.role}</strong>
                 <time>{new Date(message.createdAt).toLocaleString()}</time>
               </div>
-              <p>{message.content}</p>
+              <div className="message-markdown">
+                <MarkdownText text={message.content} />
+              </div>
             </article>
           ))}
         </section>
