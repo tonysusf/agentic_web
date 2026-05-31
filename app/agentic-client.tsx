@@ -259,38 +259,23 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
     return (
       <main className="chat-shell">
         <aside className="chat-sidebar" aria-label="Workspace navigation">
-          <div className="sidebar-brand-row">
-            <div className="brand" aria-label="Agentic Lite">
-              <AgenticMark />
-              <span>agentic</span>
-            </div>
-            <Search size={18} strokeWidth={2.1} />
-          </div>
-
-          <nav className="sidebar-nav">
-            <button type="button" onClick={handleNewTask}>
-              <Plus size={18} />
-              <span>New task</span>
-            </button>
-            <button type="button">
-              <Library size={18} />
-              <span>Library</span>
-            </button>
-          </nav>
-
-          <div className="task-list">
-            <p>All tasks</p>
-            <button type="button" className="active-task">
-              <AgenticMark />
-              <span>{messages[0]?.content || "Current task"}</span>
-            </button>
-          </div>
+          <SidebarContent
+            currentTask={messages[0]?.content || "Current task"}
+            onNewTask={handleNewTask}
+          />
         </aside>
 
         <section className="chat-main" aria-label="Chat">
           <header className="chat-header">
             <h1>Agentic Lite</h1>
           </header>
+
+          <div className="mobile-chat-nav">
+            <SidebarContent
+              currentTask={messages[0]?.content || "Current task"}
+              onNewTask={handleNewTask}
+            />
+          </div>
 
           <div className="messages">
             {messages.length === 0 && !isSubmitting && !error && (
@@ -378,5 +363,44 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
         <span>Agentic Lite</span>
       </footer>
     </main>
+  );
+}
+
+function SidebarContent({
+  currentTask,
+  onNewTask
+}: {
+  currentTask: string;
+  onNewTask: () => void;
+}) {
+  return (
+    <>
+      <div className="sidebar-brand-row">
+        <div className="brand" aria-label="Agentic Lite">
+          <AgenticMark />
+          <span>agentic</span>
+        </div>
+        <Search size={18} strokeWidth={2.1} />
+      </div>
+
+      <nav className="sidebar-nav">
+        <button type="button" onClick={onNewTask}>
+          <Plus size={18} />
+          <span>New task</span>
+        </button>
+        <button type="button">
+          <Library size={18} />
+          <span>Library</span>
+        </button>
+      </nav>
+
+      <div className="task-list">
+        <p>All tasks</p>
+        <button type="button" className="active-task">
+          <AgenticMark />
+          <span>{currentTask}</span>
+        </button>
+      </div>
+    </>
   );
 }
