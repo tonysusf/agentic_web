@@ -123,6 +123,173 @@ textarea {
   font-size: 13px;
 }
 
+.admin-login-shell,
+.admin-shell {
+  min-height: 100vh;
+  background: #fbfbfa;
+}
+
+.admin-login-shell {
+  display: grid;
+  padding: 24px;
+  place-items: center;
+}
+
+.admin-login-card {
+  display: grid;
+  width: min(100%, 360px);
+  gap: 16px;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.admin-login-card h1,
+.admin-header h1 {
+  margin: 0;
+  color: #2f2d29;
+  font-size: 24px;
+}
+
+.admin-login-card label {
+  display: grid;
+  gap: 7px;
+  color: #5f5c56;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-login-card input {
+  min-height: 42px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.admin-login-card button,
+.admin-header button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: #fff;
+  background: #171715;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.admin-shell {
+  padding: 28px;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-header p,
+.admin-muted {
+  margin: 6px 0 0;
+  color: #77736c;
+}
+
+.admin-error {
+  margin: 0;
+  color: #a12f2f;
+  font-weight: 700;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.admin-session-list,
+.admin-messages {
+  min-height: 68vh;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-session-list h2,
+.admin-messages h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.admin-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-session {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  color: #383631;
+  background: #f6f6f4;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.admin-session.active {
+  background: #ededeb;
+  border-color: var(--line-strong);
+}
+
+.admin-session span,
+.admin-session small,
+.admin-message time {
+  color: #77736c;
+  font-size: 12px;
+}
+
+.admin-messages {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.admin-message {
+  padding: 14px;
+  background: #f8f8f6;
+  border-radius: 12px;
+}
+
+.admin-message div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-message p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.admin-message.user {
+  background: #eeeeec;
+}
+
 .composer {
   display: flex;
   min-height: 96px;
@@ -588,6 +755,19 @@ textarea {
 
   .message {
     font-size: 15px;
+  }
+
+  .admin-shell {
+    padding: 18px;
+  }
+
+  .admin-header,
+  .admin-grid {
+    display: grid;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
   }
 
   .chat-composer {

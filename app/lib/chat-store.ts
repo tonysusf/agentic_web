@@ -7,11 +7,27 @@ export type StoredMessage = {
   createdAt: string;
 };
 
+export type StoredSession = {
+  sessionId: string;
+  messageCount: number;
+  firstMessageAt: string;
+  lastMessageAt: string;
+  preview: string;
+};
+
 type ChatMessageRow = {
   id: string;
   role: "user" | "assistant";
   content: string;
   created_at: string;
+};
+
+type ChatSessionRow = {
+  session_id: string;
+  message_count: number;
+  first_message_at: string;
+  last_message_at: string;
+  preview: string;
 };
 
 let didEnsureSchema = false;
@@ -68,6 +84,32 @@ export async function getMessages(sessionId: string): Promise<StoredMessage[]> {
     content: row.content,
     createdAt: row.created_at
   }));
+}
+
+export async function listSessions(): Promise<StoredSession[]> {
+  await ensureChatSchema();
+
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT DISTINCT ON (session_id)
+      session_id,
+      COUNT(*) OVER (PARTITION BY session_id)::int AS message_count,
+      MIN(created_at) OVER (PARTITION BY session_id) AS first_message_at,
+      MAX(created_at) OVER (PARTITION BY session_id) AS last_message_at,
+      content AS preview
+    FROM chat_messages
+    ORDER BY session_id, created_at ASC
+  `) as ChatSessionRow[];
+
+  return rows
+    .map((row) => ({
+      sessionId: row.session_id,
+      messageCount: row.message_count,
+      firstMessageAt: row.first_message_at,
+      lastMessageAt: row.last_message_at,
+      preview: row.preview
+    }))
+    .sort((left, right) => Date.parse(right.lastMessageAt) - Date.parse(left.lastMessageAt));
 }
 
 export async function saveMessage({
