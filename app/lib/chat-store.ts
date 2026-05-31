@@ -92,6 +92,21 @@ export async function saveMessage({
   `;
 }
 
+export async function countUserMessagesToday(sessionId: string) {
+  await ensureChatSchema();
+
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT COUNT(*)::int AS count
+    FROM chat_messages
+    WHERE session_id = ${sessionId}
+      AND role = 'user'
+      AND created_at >= date_trunc('day', NOW())
+  `) as Array<{ count: number }>;
+
+  return rows[0]?.count || 0;
+}
+
 export async function clearMessages(sessionId: string) {
   await ensureChatSchema();
 

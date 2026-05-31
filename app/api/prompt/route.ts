@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { saveMessage } from "../../lib/chat-store";
+import { countUserMessagesToday, saveMessage } from "../../lib/chat-store";
 
 type OpenRouterResponse = {
   choices?: Array<{
@@ -15,12 +15,18 @@ type OpenRouterResponse = {
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "openai/gpt-oss-120b:free";
 
+function getDailyQuestionLimit() {
+  const configuredLimit = Number.parseInt(process.env.CHAT_DAILY_QUESTION_LIMIT || "8", 10);
+  return Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : 8;
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { prompt?: unknown; sessionId?: unknown } | null;
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+  const dailyQuestionLimit = getDailyQuestionLimit();
 
   if (!prompt) {
     return NextResponse.json({ error: "Prompt is required." }, { status: 400 });
@@ -34,6 +40,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Missing OPENROUTER_API_KEY environment variable." },
       { status: 500 }
+    );
+  }
+
+  const usedQuestionsToday = await countUserMessagesToday(sessionId);
+
+  if (usedQuestionsToday >= dailyQuestionLimit) {
+    return NextResponse.json(
+      {
+        error: `Daily question limit reached. This browser session can ask up to ${dailyQuestionLimit} questions per day.`
+      },
+      { status: 429 }
     );
   }
 
