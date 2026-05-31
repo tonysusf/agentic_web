@@ -181,7 +181,7 @@ export default function AdminPage() {
           <h2>{selectedSessionId ? "Messages" : "Select a session"}</h2>
           {messages.map((message) => (
             <article className={`admin-message ${message.role}`} key={message.id}>
-              <div>
+              <div className="admin-message-meta">
                 <strong>{message.role}</strong>
                 <time>{new Date(message.createdAt).toLocaleString()}</time>
               </div>

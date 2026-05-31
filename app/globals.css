@@ -216,11 +216,21 @@ textarea {
 
 .admin-session-list,
 .admin-messages {
-  min-height: 68vh;
   padding: 16px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
+}
+
+.admin-session-list {
+  position: sticky;
+  top: 28px;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.admin-messages {
+  min-height: 68vh;
 }
 
 .admin-session-list h2,
@@ -272,7 +282,7 @@ textarea {
   border-radius: 12px;
 }
 
-.admin-message div {
+.admin-message-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
