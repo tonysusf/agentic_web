@@ -349,6 +349,18 @@ textarea {
   margin: 0;
 }
 
+.message-markdown {
+  display: inline;
+}
+
+.message-markdown p {
+  margin: 0 0 10px;
+}
+
+.message-markdown p:last-child {
+  margin-bottom: 0;
+}
+
 .message-role {
   margin-bottom: 6px !important;
   color: #8a867f;

@@ -56,6 +56,26 @@ function AssistantLogo() {
   );
 }
 
+function renderInlineMarkdown(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
+    }
+
+    return part;
+  });
+}
+
+function MarkdownText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("\n").map((line, index) => (
+        <p key={`${line}-${index}`}>{renderInlineMarkdown(line)}</p>
+      ))}
+    </>
+  );
+}
+
 function TypingMessage({
   text,
   onComplete
@@ -81,10 +101,10 @@ function TypingMessage({
   }, [onComplete, text]);
 
   return (
-    <p>
-      {visibleText}
+    <div className="message-markdown">
+      <MarkdownText text={visibleText} />
       <span className="typing-caret" aria-hidden="true" />
-    </p>
+    </div>
   );
 }
 
@@ -259,7 +279,9 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
                     }
                   />
                 ) : (
-                  <p>{message.content}</p>
+                  <div className="message-markdown">
+                    <MarkdownText text={message.content} />
+                  </div>
                 )}
               </article>
             ))}
