@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 function renderInlineMarkdown(text: string) {
   return text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*\n]+\*)/g).map((part, index) => {
     if (part.startsWith("`") && part.endsWith("`")) {
@@ -16,20 +18,88 @@ function renderInlineMarkdown(text: string) {
   });
 }
 
+function renderParagraph(lines: string[], key: string) {
+  return (
+    <p key={key}>
+      {lines.map((line, lineIndex) => (
+        <span key={`${line}-${lineIndex}`}>
+          {lineIndex > 0 ? <br /> : null}
+          {renderInlineMarkdown(line)}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function renderList(items: string[], type: "ordered" | "unordered", key: string) {
+  const Tag = type === "ordered" ? "ol" : "ul";
+
+  return (
+    <Tag key={key}>
+      {items.map((item, itemIndex) => (
+        <li key={`${item}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+      ))}
+    </Tag>
+  );
+}
+
 function renderTextBlock(text: string) {
-  return text
-    .split(/\n{2,}/)
-    .filter(Boolean)
-    .map((paragraph, paragraphIndex) => (
-      <p key={`${paragraph}-${paragraphIndex}`}>
-        {paragraph.split("\n").map((line, lineIndex) => (
-          <span key={`${line}-${lineIndex}`}>
-            {lineIndex > 0 ? <br /> : null}
-            {renderInlineMarkdown(line)}
-          </span>
-        ))}
-      </p>
-    ));
+  const blocks: ReactNode[] = [];
+  const paragraphLines: string[] = [];
+  let listItems: string[] = [];
+  let listType: "ordered" | "unordered" | null = null;
+
+  function flushParagraph() {
+    if (paragraphLines.length === 0) {
+      return;
+    }
+
+    blocks.push(renderParagraph([...paragraphLines], `paragraph-${blocks.length}`));
+    paragraphLines.length = 0;
+  }
+
+  function flushList() {
+    if (!listType || listItems.length === 0) {
+      return;
+    }
+
+    blocks.push(renderList([...listItems], listType, `list-${blocks.length}`));
+    listItems = [];
+    listType = null;
+  }
+
+  text.replace(/\r\n/g, "\n").split("\n").forEach((line) => {
+    const trimmedLine = line.trim();
+    const bulletMatch = line.match(/^\s*[-*]\s+(.+)$/);
+    const orderedMatch = line.match(/^\s*\d+[.)]\s+(.+)$/);
+
+    if (!trimmedLine) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    if (bulletMatch || orderedMatch) {
+      const nextListType = orderedMatch ? "ordered" : "unordered";
+      flushParagraph();
+
+      if (listType && listType !== nextListType) {
+        flushList();
+      }
+
+      listType = nextListType;
+      listItems.push((bulletMatch || orderedMatch)?.[1] || "");
+      return;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  });
+
+  flushParagraph();
+  flushList();
+
+  return blocks;
 }
 
 export function MarkdownText({ text }: { text: string }) {

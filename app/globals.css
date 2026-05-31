@@ -552,6 +552,21 @@ textarea {
   margin-bottom: 0;
 }
 
+.message-markdown ul,
+.message-markdown ol {
+  margin: 10px 0 14px;
+  padding-left: 1.35em;
+}
+
+.message-markdown li {
+  margin: 4px 0;
+  padding-left: 0.15em;
+}
+
+.message-markdown li p {
+  margin: 0;
+}
+
 .message-markdown code {
   padding: 0.08em 0.3em;
   background: #efefec;
