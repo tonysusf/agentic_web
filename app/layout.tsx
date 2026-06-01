@@ -2,16 +2,23 @@ import type { Metadata } from "next";
 import { GoogleAnalytics } from "./components/google-analytics";
 import "./globals.css";
 
+const siteDescription =
+  "Agentic Lite is a lightweight AI assistant for quick answers, writing help, research summaries, travel planning, and everyday task support.";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://agentic.im996.com"),
   title: "Agentic Lite",
-  description: "A lightweight AI assistant for quick answers, writing, research, and task planning.",
+  description: siteDescription,
+  applicationName: "Agentic Lite",
+  authors: [{ name: "Agentic Lite" }],
+  creator: "Agentic Lite",
+  publisher: "Agentic Lite",
   alternates: {
     canonical: "/"
   },
   openGraph: {
     title: "Agentic Lite",
-    description: "Assign a task or ask anything with a lightweight AI assistant.",
+    description: siteDescription,
     url: "/",
     siteName: "Agentic Lite",
     images: [
@@ -28,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Agentic Lite",
-    description: "Assign a task or ask anything with a lightweight AI assistant.",
+    description: siteDescription,
     images: ["/opengraph-image"]
   }
 };
