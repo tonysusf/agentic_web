@@ -33,8 +33,12 @@ type HistoryResponse = {
 
 const SESSION_STORAGE_KEY = "agentic-lite-session-id";
 
+function getExistingSessionId() {
+  return window.localStorage.getItem(SESSION_STORAGE_KEY);
+}
+
 function getOrCreateSessionId() {
-  const existingSessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
+  const existingSessionId = getExistingSessionId();
 
   if (existingSessionId) {
     return existingSessionId;
@@ -139,12 +143,17 @@ export default function AgenticClient({ initialChatOpen = false, llmModel }: Age
 
   useEffect(() => {
     window.setTimeout(() => {
-      const currentSessionId = getOrCreateSessionId();
-      setSessionId(currentSessionId);
+      const existingSessionId = getExistingSessionId();
 
       if (!initialChatOpen) {
+        if (existingSessionId) {
+          window.location.replace("/chat");
+        }
         return;
       }
+
+      const currentSessionId = existingSessionId || getOrCreateSessionId();
+      setSessionId(currentSessionId);
 
       loadHistory(currentSessionId)
         .then((data) => {
