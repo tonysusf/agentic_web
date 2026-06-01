@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { countUserMessagesToday, saveMessage } from "../../lib/chat-store";
+import { getConfiguredModel } from "../../lib/model-config";
 
 type OpenRouterResponse = {
   choices?: Array<{
@@ -13,7 +14,6 @@ type OpenRouterResponse = {
 };
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "openai/gpt-oss-120b:free";
 
 function getDailyQuestionLimit() {
   const configuredLimit = Number.parseInt(process.env.CHAT_DAILY_QUESTION_LIMIT || "8", 10);
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+  const model = getConfiguredModel();
   const dailyQuestionLimit = getDailyQuestionLimit();
 
   if (!prompt) {

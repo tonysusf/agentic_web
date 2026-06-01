@@ -523,6 +523,35 @@ textarea {
   font-weight: 720;
 }
 
+.model-badge {
+  display: inline-flex;
+  max-width: min(46vw, 420px);
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  border: 1px solid #e0dfd9;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #ffffff;
+  color: #5f5b51;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.model-badge span {
+  color: #898478;
+  font-weight: 650;
+}
+
+.model-badge strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #373530;
+  font-weight: 720;
+  text-overflow: ellipsis;
+}
+
 .messages {
   width: min(100%, 840px);
   margin: 0 auto;

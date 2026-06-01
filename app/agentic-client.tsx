@@ -123,9 +123,10 @@ function TypingMessage({
 
 type AgenticClientProps = {
   initialChatOpen?: boolean;
+  llmModel: string;
 };
 
-export default function AgenticClient({ initialChatOpen = false }: AgenticClientProps) {
+export default function AgenticClient({ initialChatOpen = false, llmModel }: AgenticClientProps) {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
@@ -268,6 +269,10 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
         <section className="chat-main" aria-label="Chat">
           <header className="chat-header">
             <h1>Agentic Lite</h1>
+            <span className="model-badge" title={llmModel}>
+              <span>Model</span>
+              <strong>{llmModel}</strong>
+            </span>
           </header>
 
           <div className="mobile-chat-nav">
@@ -361,6 +366,10 @@ export default function AgenticClient({ initialChatOpen = false }: AgenticClient
 
       <footer className="site-footer">
         <span>Agentic Lite</span>
+        <span className="model-badge" title={llmModel}>
+          <span>Model</span>
+          <strong>{llmModel}</strong>
+        </span>
       </footer>
     </main>
   );
