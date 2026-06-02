@@ -254,7 +254,7 @@ export default function AgenticClient({
         onChange={(event) => setPrompt(event.target.value)}
         onKeyDown={handleTextareaKeyDown}
         placeholder={isChatOpen ? "Message Agentic" : "Assign a task or ask anything"}
-        rows={4}
+        rows={isChatOpen ? 1 : 4}
         value={prompt}
       />
       <div className="composer-actions">
