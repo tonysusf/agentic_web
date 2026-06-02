@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { countUserMessagesToday, saveMessage } from "../../lib/chat-store";
-import { getConfiguredModel } from "../../lib/model-config";
+import { countUserMessagesToday, getRecentMessages, saveMessage } from "../../lib/chat-store";
+import { getConfiguredModel, getContextWindowLength } from "../../lib/model-config";
 
 type OpenRouterResponse = {
   choices?: Array<{
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
   const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = getConfiguredModel();
+  const contextWindowLength = getContextWindowLength();
   const dailyQuestionLimit = getDailyQuestionLimit();
 
   if (!prompt) {
@@ -54,6 +55,8 @@ export async function POST(request: Request) {
     );
   }
 
+  const contextMessages = await getRecentMessages(sessionId, contextWindowLength);
+
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
@@ -70,6 +73,10 @@ export async function POST(request: Request) {
           content:
             "You are Agentic Lite, a concise but helpful AI assistant. Answer the user directly in 2-4 short paragraphs. Keep the tone practical and clear."
         },
+        ...contextMessages.map((message) => ({
+          role: message.role,
+          content: message.content
+        })),
         {
           role: "user",
           content: prompt

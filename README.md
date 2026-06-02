@@ -20,6 +20,7 @@ Required environment variables:
 ```bash
 DATABASE_URL=...
 CHAT_DAILY_QUESTION_LIMIT=8
+CHAT_CONTEXT_WINDOW_LENGTH=4
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=openai/gpt-oss-120b:free
 OPENROUTER_SITE_URL=http://agentic.im996.com

@@ -86,6 +86,34 @@ export async function getMessages(sessionId: string): Promise<StoredMessage[]> {
   }));
 }
 
+export async function getRecentMessages(sessionId: string, limit: number): Promise<StoredMessage[]> {
+  if (limit <= 0) {
+    return [];
+  }
+
+  await ensureChatSchema();
+
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT id, role, content, created_at
+    FROM (
+      SELECT id, role, content, created_at
+      FROM chat_messages
+      WHERE session_id = ${sessionId}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    ) AS recent_messages
+    ORDER BY created_at ASC
+  `) as ChatMessageRow[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    role: row.role,
+    content: row.content,
+    createdAt: row.created_at
+  }));
+}
+
 export async function listSessions(): Promise<StoredSession[]> {
   await ensureChatSchema();
 

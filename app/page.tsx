@@ -1,6 +1,11 @@
 import AgenticClient from "./agentic-client";
-import { getConfiguredModel } from "./lib/model-config";
+import { getConfiguredModel, getContextWindowLength } from "./lib/model-config";
 
 export default function Home() {
-  return <AgenticClient llmModel={getConfiguredModel()} />;
+  return (
+    <AgenticClient
+      contextWindowLength={getContextWindowLength()}
+      llmModel={getConfiguredModel()}
+    />
+  );
 }

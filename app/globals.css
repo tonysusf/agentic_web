@@ -523,6 +523,14 @@ textarea {
   font-weight: 720;
 }
 
+.chat-header-meta {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .model-badge {
   display: inline-flex;
   max-width: min(46vw, 420px);
