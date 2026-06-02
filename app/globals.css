@@ -507,13 +507,18 @@ textarea {
 }
 
 .chat-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
   min-height: 58px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 0 24px;
+  background: rgba(251, 251, 250, 0.96);
   border-bottom: 1px solid #ecece8;
+  backdrop-filter: blur(12px);
 }
 
 .chat-header h1 {
@@ -863,13 +868,8 @@ textarea {
   }
 
   .chat-header {
-    position: sticky;
-    top: 0;
-    z-index: 30;
     min-height: 54px;
     padding: 0 16px;
-    background: rgba(251, 251, 250, 0.96);
-    backdrop-filter: blur(12px);
   }
 
   .mobile-chat-nav {
