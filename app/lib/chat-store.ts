@@ -30,6 +30,8 @@ type ChatSessionRow = {
   preview: string;
 };
 
+const CHAT_HISTORY_RETENTION_DAYS = 3;
+
 let didEnsureSchema = false;
 
 function getSql() {
@@ -64,11 +66,28 @@ export async function ensureChatSchema() {
     ON chat_messages (session_id, created_at)
   `;
 
+  await sql`
+    CREATE INDEX IF NOT EXISTS chat_messages_created_idx
+    ON chat_messages (created_at)
+  `;
+
   didEnsureSchema = true;
+}
+
+async function deleteExpiredChatMessages() {
+  await ensureChatSchema();
+
+  const sql = getSql();
+
+  await sql`
+    DELETE FROM chat_messages
+    WHERE created_at < NOW() - (${CHAT_HISTORY_RETENTION_DAYS}::int * INTERVAL '1 day')
+  `;
 }
 
 export async function getMessages(sessionId: string): Promise<StoredMessage[]> {
   await ensureChatSchema();
+  await deleteExpiredChatMessages();
 
   const sql = getSql();
   const rows = (await sql`
@@ -92,6 +111,7 @@ export async function getRecentMessages(sessionId: string, limit: number): Promi
   }
 
   await ensureChatSchema();
+  await deleteExpiredChatMessages();
 
   const sql = getSql();
   const rows = (await sql`
@@ -116,6 +136,7 @@ export async function getRecentMessages(sessionId: string, limit: number): Promi
 
 export async function listSessions(): Promise<StoredSession[]> {
   await ensureChatSchema();
+  await deleteExpiredChatMessages();
 
   const sql = getSql();
   const rows = (await sql`
@@ -152,6 +173,7 @@ export async function saveMessage({
   content: string;
 }) {
   await ensureChatSchema();
+  await deleteExpiredChatMessages();
 
   const sql = getSql();
 
@@ -164,6 +186,7 @@ export async function saveMessage({
 
 export async function countUserMessagesToday(sessionId: string) {
   await ensureChatSchema();
+  await deleteExpiredChatMessages();
 
   const sql = getSql();
   const rows = (await sql`
