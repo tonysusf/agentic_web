@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
+  ChevronDown,
   Library,
+  PanelRight,
   Plus,
   Search,
   Sparkles,
@@ -58,6 +60,53 @@ type HistoryResponse = {
 };
 
 const SESSION_STORAGE_KEY = "agentic-lite-session-id";
+const CONSOLE_STORAGE_KEY = "agentic-lite-llm-logs";
+const CONSOLE_LOG_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+function isConsoleEntry(value: unknown): value is ConsoleEntry {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const entry = value as Partial<ConsoleEntry>;
+  return (
+    typeof entry.id === "string" &&
+    typeof entry.callNumber === "number" &&
+    typeof entry.prompt === "string" &&
+    (entry.status === "success" || entry.status === "error") &&
+    typeof entry.timestamp === "string"
+  );
+}
+
+function removeExpiredConsoleEntries(entries: ConsoleEntry[]) {
+  const oldestAllowedTimestamp = Date.now() - CONSOLE_LOG_RETENTION_MS;
+
+  return entries.filter((entry) => Date.parse(entry.timestamp) > oldestAllowedTimestamp);
+}
+
+function loadConsoleEntries() {
+  try {
+    const storedValue = window.localStorage.getItem(CONSOLE_STORAGE_KEY);
+    const parsedValue = storedValue ? (JSON.parse(storedValue) as unknown) : [];
+    const entries = Array.isArray(parsedValue) ? parsedValue.filter(isConsoleEntry) : [];
+    return removeExpiredConsoleEntries(entries);
+  } catch {
+    return [];
+  }
+}
+
+function saveConsoleEntries(entries: ConsoleEntry[]) {
+  try {
+    if (entries.length === 0) {
+      window.localStorage.removeItem(CONSOLE_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(CONSOLE_STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // Keep the in-memory console working if browser storage is unavailable or full.
+  }
+}
 
 function getExistingSessionId() {
   return window.localStorage.getItem(SESSION_STORAGE_KEY);
@@ -75,13 +124,13 @@ function getOrCreateSessionId() {
   return sessionId;
 }
 
-async function submitPrompt(prompt: string, sessionId: string) {
+async function submitPrompt(prompt: string, sessionId: string, model: string) {
   const response = await fetch("/api/prompt", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ prompt, sessionId })
+    body: JSON.stringify({ model, prompt, sessionId })
   });
 
   if (!response.ok) {
@@ -134,9 +183,56 @@ function AssistantLogo() {
   );
 }
 
-function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
+function ModelSelector({
+  disabled,
+  models,
+  onChange,
+  value
+}: {
+  disabled: boolean;
+  models: Array<{ id: string; label: string }>;
+  onChange: (model: string) => void;
+  value: string;
+}) {
   return (
-    <aside className="openrouter-console" aria-label="OpenRouter response console">
+    <label className="model-selector">
+      <span>Model</span>
+      <select
+        aria-label="LLM model"
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {models.map((model) => (
+          <option key={model.id} value={model.id}>
+            {model.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
+  const latestEntryId = entries[0]?.id;
+  const [entryVisibilityOverrides, setEntryVisibilityOverrides] = useState<Map<string, boolean>>(
+    new Map()
+  );
+
+  function toggleEntry(entryId: string, isExpanded: boolean) {
+    setEntryVisibilityOverrides((currentOverrides) => {
+      const nextOverrides = new Map(currentOverrides);
+      nextOverrides.set(entryId, !isExpanded);
+      return nextOverrides;
+    });
+  }
+
+  return (
+    <aside
+      className="openrouter-console"
+      id="llm-log-console"
+      aria-label="OpenRouter response console"
+    >
       <header className="console-header">
         <h2>LLM log console</h2>
         <span>{entries.length} calls</span>
@@ -149,29 +245,46 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
             <p>Responses will appear here after you send a prompt.</p>
           </div>
         ) : (
-          entries.map((entry) => (
-            <article className="console-entry" key={entry.id}>
-              <div className="console-entry-meta">
-                <strong>Call {entry.callNumber}</strong>
-                <span className={`console-status console-status-${entry.status}`}>
-                  {entry.status}
-                </span>
-                <time dateTime={entry.timestamp}>
-                  {new Date(entry.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit"
-                  })}
-                </time>
-              </div>
-              <p className="console-prompt" title={entry.prompt}>
-                {entry.prompt}
-              </p>
-              <pre>
-                <code>{JSON.stringify(entry.payload, null, 2)}</code>
-              </pre>
-            </article>
-          ))
+          entries.map((entry) => {
+            const isExpanded =
+              entryVisibilityOverrides.get(entry.id) ?? entry.id === latestEntryId;
+            const contentId = `console-entry-${entry.id}`;
+
+            return (
+              <article className="console-entry" key={entry.id}>
+                <button
+                  type="button"
+                  className="console-entry-toggle"
+                  aria-controls={contentId}
+                  aria-expanded={isExpanded}
+                  onClick={() => toggleEntry(entry.id, isExpanded)}
+                >
+                  <span className="console-entry-meta">
+                    <strong>Call {entry.callNumber}</strong>
+                    <span className={`console-status console-status-${entry.status}`}>
+                      {entry.status}
+                    </span>
+                    <time dateTime={entry.timestamp}>
+                      {new Date(entry.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit"
+                      })}
+                    </time>
+                    <ChevronDown className="console-entry-chevron" size={15} />
+                  </span>
+                  <span className="console-prompt" title={entry.prompt}>
+                    {entry.prompt}
+                  </span>
+                </button>
+                {isExpanded ? (
+                  <pre id={contentId}>
+                    <code>{JSON.stringify(entry.payload, null, 2)}</code>
+                  </pre>
+                ) : null}
+              </article>
+            );
+          })
         )}
       </div>
     </aside>
@@ -213,22 +326,27 @@ function TypingMessage({
 type AgenticClientProps = {
   initialChatOpen?: boolean;
   contextWindowLength: number;
+  freeModels: Array<{ id: string; label: string }>;
   llmModel: string;
 };
 
 export default function AgenticClient({
   contextWindowLength,
+  freeModels,
   initialChatOpen = false,
   llmModel
 }: AgenticClientProps) {
   const [prompt, setPrompt] = useState("");
+  const [selectedModel, setSelectedModel] = useState(llmModel);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
+  const [isConsoleVisible, setIsConsoleVisible] = useState(true);
   const [sessionId, setSessionId] = useState("");
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
+  const [consoleStorageReady, setConsoleStorageReady] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const conversationRef = useRef(0);
   const canSubmit = prompt.trim().length > 0 && !isSubmitting;
@@ -256,6 +374,28 @@ export default function AgenticClient({
         });
     }, 0);
   }, [initialChatOpen]);
+
+  useEffect(() => {
+    const loadTimeout = window.setTimeout(() => {
+      setConsoleEntries(loadConsoleEntries());
+      setConsoleStorageReady(true);
+    }, 0);
+
+    const cleanupInterval = window.setInterval(() => {
+      setConsoleEntries((currentEntries) => removeExpiredConsoleEntries(currentEntries));
+    }, 60_000);
+
+    return () => {
+      window.clearTimeout(loadTimeout);
+      window.clearInterval(cleanupInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (consoleStorageReady) {
+      saveConsoleEntries(consoleEntries);
+    }
+  }, [consoleEntries, consoleStorageReady]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -288,7 +428,7 @@ export default function AgenticClient({
     setMessages(messagesWithUser);
 
     try {
-      const data = await submitPrompt(trimmedPrompt, currentSessionId);
+      const data = await submitPrompt(trimmedPrompt, currentSessionId, selectedModel);
       if (conversationRef.current !== conversationId) {
         return;
       }
@@ -413,7 +553,7 @@ export default function AgenticClient({
 
   if (isChatOpen) {
     return (
-      <main className="chat-shell">
+      <main className={`chat-shell${isConsoleVisible ? "" : " console-hidden"}`}>
         <aside className="chat-sidebar" aria-label="Workspace navigation">
           <SidebarContent
             currentTask={messages[0]?.content || "Current task"}
@@ -428,14 +568,26 @@ export default function AgenticClient({
           <header className="chat-header">
             <h1>Agentic Lite</h1>
             <div className="chat-header-meta" aria-label="LLM settings">
-              <span className="model-badge" title={llmModel}>
-                <span>Model</span>
-                <strong>{llmModel}</strong>
-              </span>
+              <ModelSelector
+                disabled={isSubmitting}
+                models={freeModels}
+                onChange={setSelectedModel}
+                value={selectedModel}
+              />
               <span className="model-badge">
-                <span>Context</span>
+                <span>Content length:</span>
                 <strong>{contextWindowLength} messages</strong>
               </span>
+              <button
+                type="button"
+                className="console-toggle"
+                aria-controls="llm-log-console"
+                aria-expanded={isConsoleVisible}
+                onClick={() => setIsConsoleVisible((currentValue) => !currentValue)}
+              >
+                <PanelRight size={15} />
+                <span>{isConsoleVisible ? "Hide logs" : "Show logs"}</span>
+              </button>
             </div>
           </header>
 
@@ -481,9 +633,25 @@ export default function AgenticClient({
             ))}
 
             {isSubmitting && (
-              <article className="message message-assistant">
+              <article className="message message-assistant message-thinking">
                 <AssistantLogo />
-                <p>Thinking through your request...</p>
+                <div
+                  className="thinking-indicator"
+                  role="status"
+                  aria-label="Agentic Lite is thinking through your request"
+                >
+                  <div className="thinking-copy">
+                    <span>Thinking through your request</span>
+                    <span className="thinking-dots" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                  </div>
+                  <span className="thinking-track" aria-hidden="true">
+                    <span />
+                  </span>
+                </div>
               </article>
             )}
 
@@ -498,7 +666,7 @@ export default function AgenticClient({
           <div className="chat-composer">{composer}</div>
         </section>
 
-        <OpenRouterConsole entries={consoleEntries} />
+        {isConsoleVisible ? <OpenRouterConsole entries={consoleEntries} /> : null}
       </main>
     );
   }
@@ -536,12 +704,14 @@ export default function AgenticClient({
       <footer className="site-footer">
         <span>Agentic Lite</span>
         <div className="chat-header-meta" aria-label="LLM settings">
-          <span className="model-badge" title={llmModel}>
-            <span>Model</span>
-            <strong>{llmModel}</strong>
-          </span>
+          <ModelSelector
+            disabled={isSubmitting}
+            models={freeModels}
+            onChange={setSelectedModel}
+            value={selectedModel}
+          />
           <span className="model-badge">
-            <span>Context</span>
+            <span>Content length:</span>
             <strong>{contextWindowLength} messages</strong>
           </span>
         </div>

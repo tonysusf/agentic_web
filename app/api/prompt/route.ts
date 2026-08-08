@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { countUserMessagesToday, getRecentMessages, saveMessage } from "../../lib/chat-store";
-import { getConfiguredModel, getContextWindowLength } from "../../lib/model-config";
+import {
+  getConfiguredModel,
+  getContextWindowLength,
+  isAvailableFreeModel
+} from "../../lib/model-config";
 
 type OpenRouterResponse = {
   choices?: Array<{
@@ -21,11 +25,16 @@ function getDailyQuestionLimit() {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { prompt?: unknown; sessionId?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    model?: unknown;
+    prompt?: unknown;
+    sessionId?: unknown;
+  } | null;
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+  const requestedModel = typeof body?.model === "string" ? body.model.trim() : "";
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = getConfiguredModel();
+  const model = requestedModel || getConfiguredModel();
   const contextWindowLength = getContextWindowLength();
   const dailyQuestionLimit = getDailyQuestionLimit();
 
@@ -35,6 +44,10 @@ export async function POST(request: Request) {
 
   if (!sessionId) {
     return NextResponse.json({ error: "sessionId is required." }, { status: 400 });
+  }
+
+  if (!isAvailableFreeModel(model)) {
+    return NextResponse.json({ error: "Selected model is not available." }, { status: 400 });
   }
 
   if (!apiKey) {
