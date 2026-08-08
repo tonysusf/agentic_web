@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
@@ -325,10 +325,12 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
 
 function TypingMessage({
   text,
-  onComplete
+  onComplete,
+  onProgress
 }: {
   text: string;
   onComplete: () => void;
+  onProgress: () => void;
 }) {
   const [visibleText, setVisibleText] = useState("");
 
@@ -337,6 +339,7 @@ function TypingMessage({
     const intervalId = window.setInterval(() => {
       currentIndex += 1;
       setVisibleText(text.slice(0, currentIndex));
+      onProgress();
 
       if (currentIndex >= text.length) {
         window.clearInterval(intervalId);
@@ -345,7 +348,7 @@ function TypingMessage({
     }, 18);
 
     return () => window.clearInterval(intervalId);
-  }, [onComplete, text]);
+  }, [onComplete, onProgress, text]);
 
   return (
     <div className="message-markdown">
@@ -380,8 +383,35 @@ export default function AgenticClient({
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
   const [consoleStorageReady, setConsoleStorageReady] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const conversationEndRef = useRef<HTMLDivElement>(null);
+  const scrollFrameRef = useRef<number | null>(null);
   const conversationRef = useRef(0);
   const canSubmit = prompt.trim().length > 0 && !isSubmitting;
+
+  const scrollConversationToBottom = useCallback(() => {
+    if (scrollFrameRef.current !== null) {
+      return;
+    }
+
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      conversationEndRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+      scrollFrameRef.current = null;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0 || isSubmitting || error) {
+      scrollConversationToBottom();
+    }
+  }, [error, isSubmitting, messages.length, scrollConversationToBottom]);
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -674,6 +704,7 @@ export default function AgenticClient({
                 {message.isTyping ? (
                   <TypingMessage
                     text={message.content}
+                    onProgress={scrollConversationToBottom}
                     onComplete={() =>
                       setMessages((currentMessages) =>
                         currentMessages.map((currentMessage) =>
@@ -719,6 +750,8 @@ export default function AgenticClient({
                 <p>{error}</p>
               </article>
             )}
+
+            <div className="conversation-end" ref={conversationEndRef} aria-hidden="true" />
           </div>
 
           <div className="chat-composer">{composer}</div>

@@ -10,6 +10,11 @@ export const MODEL_OPTIONS = [
     kind: "chat"
   },
   {
+    id: "nvidia/nemotron-3-ultra-550b-a55b:free",
+    label: "NVIDIA Nemotron 3 Ultra 550B",
+    kind: "chat"
+  },
+  {
     id: "google/gemma-4-31b-it:free",
     label: "Google Gemma 4 31B",
     kind: "chat"

@@ -879,6 +879,11 @@ textarea {
   padding: 42px 24px 148px;
 }
 
+.conversation-end {
+  height: 1px;
+  scroll-margin-bottom: 112px;
+}
+
 .message {
   margin-bottom: 22px;
   color: #373530;
