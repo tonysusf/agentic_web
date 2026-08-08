@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
+  Check,
   ChevronDown,
+  Copy,
   Library,
   PanelRight,
   Plus,
@@ -61,6 +63,7 @@ type HistoryResponse = {
 
 const SESSION_STORAGE_KEY = "agentic-lite-session-id";
 const CONSOLE_STORAGE_KEY = "agentic-lite-llm-logs";
+const MODEL_STORAGE_KEY = "agentic-lite-selected-model";
 const CONSOLE_LOG_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 function isConsoleEntry(value: unknown): value is ConsoleEntry {
@@ -190,7 +193,7 @@ function ModelSelector({
   value
 }: {
   disabled: boolean;
-  models: Array<{ id: string; label: string }>;
+  models: Array<{ id: string; label: string; kind: "chat" | "embedding" }>;
   onChange: (model: string) => void;
   value: string;
 }) {
@@ -203,11 +206,16 @@ function ModelSelector({
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
-        {models.map((model) => (
-          <option key={model.id} value={model.id}>
-            {model.label}
-          </option>
-        ))}
+        <optgroup label="Chat models">
+          {models.filter((model) => model.kind === "chat").map((model) => (
+            <option key={model.id} value={model.id}>{model.label}</option>
+          ))}
+        </optgroup>
+        <optgroup label="Embedding models">
+          {models.filter((model) => model.kind === "embedding").map((model) => (
+            <option key={model.id} value={model.id}>{model.label}</option>
+          ))}
+        </optgroup>
       </select>
     </label>
   );
@@ -215,6 +223,7 @@ function ModelSelector({
 
 function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
   const latestEntryId = entries[0]?.id;
+  const [copiedEntryId, setCopiedEntryId] = useState<string | null>(null);
   const [entryVisibilityOverrides, setEntryVisibilityOverrides] = useState<Map<string, boolean>>(
     new Map()
   );
@@ -225,6 +234,18 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
       nextOverrides.set(entryId, !isExpanded);
       return nextOverrides;
     });
+  }
+
+  async function copyEntry(entry: ConsoleEntry) {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(entry.payload, null, 2));
+      setCopiedEntryId(entry.id);
+      window.setTimeout(() => {
+        setCopiedEntryId((currentId) => (currentId === entry.id ? null : currentId));
+      }, 1800);
+    } catch {
+      setCopiedEntryId(null);
+    }
   }
 
   return (
@@ -249,6 +270,7 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
             const isExpanded =
               entryVisibilityOverrides.get(entry.id) ?? entry.id === latestEntryId;
             const contentId = `console-entry-${entry.id}`;
+            const isCopied = copiedEntryId === entry.id;
 
             return (
               <article className="console-entry" key={entry.id}>
@@ -276,6 +298,16 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
                   <span className="console-prompt" title={entry.prompt}>
                     {entry.prompt}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  className="console-copy-button"
+                  aria-label={`Copy JSON for call ${entry.callNumber}`}
+                  title={isCopied ? "Copied" : "Copy JSON"}
+                  onClick={() => void copyEntry(entry)}
+                >
+                  {isCopied ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{isCopied ? "Copied" : "Copy"}</span>
                 </button>
                 {isExpanded ? (
                   <pre id={contentId}>
@@ -326,15 +358,15 @@ function TypingMessage({
 type AgenticClientProps = {
   initialChatOpen?: boolean;
   contextWindowLength: number;
-  freeModels: Array<{ id: string; label: string }>;
+  models: Array<{ id: string; label: string; kind: "chat" | "embedding" }>;
   llmModel: string;
 };
 
 export default function AgenticClient({
   contextWindowLength,
-  freeModels,
   initialChatOpen = false,
-  llmModel
+  llmModel,
+  models
 }: AgenticClientProps) {
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState(llmModel);
@@ -374,6 +406,22 @@ export default function AgenticClient({
         });
     }, 0);
   }, [initialChatOpen]);
+
+  useEffect(() => {
+    const loadModelTimeout = window.setTimeout(() => {
+      try {
+        const storedModel = window.localStorage.getItem(MODEL_STORAGE_KEY);
+
+        if (storedModel && models.some((model) => model.id === storedModel)) {
+          setSelectedModel(storedModel);
+        }
+      } catch {
+        // Keep the configured default when browser storage is unavailable.
+      }
+    }, 0);
+
+    return () => window.clearTimeout(loadModelTimeout);
+  }, [models]);
 
   useEffect(() => {
     const loadTimeout = window.setTimeout(() => {
@@ -525,6 +573,16 @@ export default function AgenticClient({
     }
   }
 
+  function handleModelChange(model: string) {
+    setSelectedModel(model);
+
+    try {
+      window.localStorage.setItem(MODEL_STORAGE_KEY, model);
+    } catch {
+      // The selection still works for this page when browser storage is unavailable.
+    }
+  }
+
   const composer = (
     <form className="composer" aria-label="Task prompt" onSubmit={handleSubmit} ref={formRef}>
       <label className="sr-only" htmlFor="task">
@@ -570,8 +628,8 @@ export default function AgenticClient({
             <div className="chat-header-meta" aria-label="LLM settings">
               <ModelSelector
                 disabled={isSubmitting}
-                models={freeModels}
-                onChange={setSelectedModel}
+                models={models}
+                onChange={handleModelChange}
                 value={selectedModel}
               />
               <span className="model-badge">
@@ -706,8 +764,8 @@ export default function AgenticClient({
         <div className="chat-header-meta" aria-label="LLM settings">
           <ModelSelector
             disabled={isSubmitting}
-            models={freeModels}
-            onChange={setSelectedModel}
+            models={models}
+            onChange={handleModelChange}
             value={selectedModel}
           />
           <span className="model-badge">
@@ -770,6 +828,8 @@ function SidebarContent({
           <span>{isDeleting ? "Deleting…" : "Delete current chat"}</span>
         </button>
       </div>
+
+      <p className="sidebar-credit">Built by Tony Su</p>
     </>
   );
 }

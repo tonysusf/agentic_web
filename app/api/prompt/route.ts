@@ -3,7 +3,8 @@ import { countUserMessagesToday, getRecentMessages, saveMessage } from "../../li
 import {
   getConfiguredModel,
   getContextWindowLength,
-  isAvailableFreeModel
+  getModelKind,
+  isAvailableModel
 } from "../../lib/model-config";
 
 type OpenRouterResponse = {
@@ -17,7 +18,17 @@ type OpenRouterResponse = {
   };
 };
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+type OpenRouterEmbeddingResponse = {
+  data?: Array<{
+    embedding?: number[];
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_EMBEDDINGS_URL = "https://openrouter.ai/api/v1/embeddings";
 
 function getDailyQuestionLimit() {
   const configuredLimit = Number.parseInt(process.env.CHAT_DAILY_QUESTION_LIMIT || "10", 10);
@@ -46,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "sessionId is required." }, { status: 400 });
   }
 
-  if (!isAvailableFreeModel(model)) {
+  if (!isAvailableModel(model)) {
     return NextResponse.json({ error: "Selected model is not available." }, { status: 400 });
   }
 
@@ -68,9 +79,49 @@ export async function POST(request: Request) {
     );
   }
 
+  if (getModelKind(model) === "embedding") {
+    const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://agentic.im996.com",
+        "X-OpenRouter-Title": "Agentic Lite"
+      },
+      body: JSON.stringify({ model, input: prompt })
+    });
+    const data = (await response.json().catch(() => null)) as OpenRouterEmbeddingResponse | null;
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: data?.error?.message || "OpenRouter embedding request failed.",
+          openRouterResponse: data
+        },
+        { status: response.status }
+      );
+    }
+
+    const dimensions = data?.data?.[0]?.embedding?.length;
+
+    if (!dimensions) {
+      return NextResponse.json(
+        { error: "OpenRouter returned an empty embedding.", openRouterResponse: data },
+        { status: 502 }
+      );
+    }
+
+    const result = `Generated an embedding with **${dimensions.toLocaleString()} dimensions** using \`${model}\`.\n\nThe complete vector and usage metadata are available in the LLM log console.`;
+
+    await saveMessage({ id: crypto.randomUUID(), sessionId, role: "user", content: prompt });
+    await saveMessage({ id: crypto.randomUUID(), sessionId, role: "assistant", content: result });
+
+    return NextResponse.json({ prompt, result, openRouterResponse: data });
+  }
+
   const contextMessages = await getRecentMessages(sessionId, contextWindowLength);
 
-  const response = await fetch(OPENROUTER_URL, {
+  const response = await fetch(OPENROUTER_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
