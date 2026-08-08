@@ -1,8 +1,10 @@
-export const DEFAULT_MODEL = "openrouter/free";
+export const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 export const DEFAULT_CONTEXT_WINDOW_LENGTH = 4;
 
 const RETIRED_MODELS: Record<string, string> = {
-  "openai/gpt-oss-120b:free": DEFAULT_MODEL
+  "openai/gpt-oss-120b:free": DEFAULT_MODEL,
+  "openrouter/free": DEFAULT_MODEL,
+  "google/gemma-4-26b-a4b-it:free": DEFAULT_MODEL
 };
 
 export function getConfiguredModel() {

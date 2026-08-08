@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         {
           role: "system",
           content:
-            "You are Agentic Lite, a concise but helpful AI assistant. Answer the user directly in 2-4 short paragraphs. Keep the tone practical and clear."
+            "You are Agentic Lite, a concise but helpful AI assistant. Answer the user directly in 2-4 short paragraphs. Keep the tone practical and clear. Check factual claims and the final answer for internal contradictions before responding. When regional terminology is ambiguous, lead with the broad geographic interpretation and list the useful real-world cases before briefly explaining narrower cultural definitions. Distinguish official languages from languages that are merely widely spoken."
         },
         ...contextMessages.map((message) => ({
           role: message.role,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
           content: prompt
         }
       ],
-      temperature: 0.8,
+      temperature: 0.3,
       max_tokens: 700
     })
   });
