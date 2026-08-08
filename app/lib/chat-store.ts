@@ -30,7 +30,7 @@ type ChatSessionRow = {
   preview: string;
 };
 
-const CHAT_HISTORY_RETENTION_DAYS = 3;
+const CHAT_HISTORY_RETENTION_DAYS = 1;
 
 let didEnsureSchema = false;
 

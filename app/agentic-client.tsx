@@ -14,11 +14,31 @@ import { MarkdownText } from "./components/markdown-text";
 
 type ApiResponse = {
   result: string;
+  openRouterResponse: unknown;
 };
 
 type ApiErrorResponse = {
   error?: string;
+  openRouterResponse?: unknown;
 };
+
+type ConsoleEntry = {
+  id: string;
+  prompt: string;
+  status: "success" | "error";
+  timestamp: string;
+  payload: unknown;
+};
+
+class PromptApiError extends Error {
+  payload: unknown;
+
+  constructor(message: string, payload: unknown) {
+    super(message);
+    this.name = "PromptApiError";
+    this.payload = payload;
+  }
+}
 
 type Message = {
   id: string;
@@ -64,7 +84,10 @@ async function submitPrompt(prompt: string, sessionId: string) {
 
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as ApiErrorResponse | null;
-    throw new Error(data?.error || "Agentic Lite could not process that prompt.");
+    throw new PromptApiError(
+      data?.error || "Agentic Lite could not process that prompt.",
+      data?.openRouterResponse ?? data
+    );
   }
 
   return (await response.json()) as ApiResponse;
@@ -95,6 +118,53 @@ function AssistantLogo() {
       <span>agentic</span>
       <em>Lite</em>
     </div>
+  );
+}
+
+function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
+  return (
+    <aside className="openrouter-console" aria-label="OpenRouter response console">
+      <header className="console-header">
+        <div>
+          <p>Developer console</p>
+          <h2>OpenRouter JSON</h2>
+        </div>
+        <span>{entries.length} calls</span>
+      </header>
+
+      <div className="console-output" aria-live="polite">
+        {entries.length === 0 ? (
+          <div className="console-empty">
+            <span aria-hidden="true">{`{ }`}</span>
+            <p>Responses will appear here after you send a prompt.</p>
+          </div>
+        ) : (
+          entries.map((entry, index) => (
+            <article className="console-entry" key={entry.id}>
+              <div className="console-entry-meta">
+                <strong>Call {index + 1}</strong>
+                <span className={`console-status console-status-${entry.status}`}>
+                  {entry.status}
+                </span>
+                <time dateTime={entry.timestamp}>
+                  {new Date(entry.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                  })}
+                </time>
+              </div>
+              <p className="console-prompt" title={entry.prompt}>
+                {entry.prompt}
+              </p>
+              <pre>
+                <code>{JSON.stringify(entry.payload, null, 2)}</code>
+              </pre>
+            </article>
+          ))
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -147,6 +217,7 @@ export default function AgenticClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
   const [sessionId, setSessionId] = useState("");
+  const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
   const conversationRef = useRef(0);
   const canSubmit = prompt.trim().length > 0 && !isSubmitting;
@@ -210,6 +281,16 @@ export default function AgenticClient({
       if (conversationRef.current !== conversationId) {
         return;
       }
+      setConsoleEntries((currentEntries) => [
+        ...currentEntries,
+        {
+          id: crypto.randomUUID(),
+          prompt: trimmedPrompt,
+          status: "success",
+          timestamp: new Date().toISOString(),
+          payload: data.openRouterResponse
+        }
+      ]);
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -221,6 +302,18 @@ export default function AgenticClient({
       });
     } catch (caughtError) {
       if (conversationRef.current === conversationId) {
+        if (caughtError instanceof PromptApiError) {
+          setConsoleEntries((currentEntries) => [
+            ...currentEntries,
+            {
+              id: crypto.randomUUID(),
+              prompt: trimmedPrompt,
+              status: "error",
+              timestamp: new Date().toISOString(),
+              payload: caughtError.payload
+            }
+          ]);
+        }
         setError(caughtError instanceof Error ? caughtError.message : "Something went wrong.");
       }
     } finally {
@@ -355,6 +448,8 @@ export default function AgenticClient({
 
           <div className="chat-composer">{composer}</div>
         </section>
+
+        <OpenRouterConsole entries={consoleEntries} />
       </main>
     );
   }

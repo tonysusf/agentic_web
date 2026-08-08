@@ -404,10 +404,11 @@ textarea {
 }
 
 .chat-shell {
+  --console-width: clamp(340px, 28vw, 440px);
   display: grid;
   align-items: start;
   min-height: 100vh;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr) var(--console-width);
   background: #f8f8f6;
 }
 
@@ -500,6 +501,149 @@ textarea {
   min-height: 100vh;
   grid-template-rows: auto 1fr;
   background: #fbfbfa;
+}
+
+.openrouter-console {
+  position: sticky;
+  top: 0;
+  display: grid;
+  height: 100vh;
+  grid-template-rows: auto minmax(0, 1fr);
+  color: #ecece8;
+  background: #191a18;
+  border-left: 1px solid #2f312e;
+}
+
+.console-header {
+  display: flex;
+  min-height: 78px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #343632;
+}
+
+.console-header p,
+.console-header h2 {
+  margin: 0;
+}
+
+.console-header p {
+  margin-bottom: 3px;
+  color: #8f948b;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.console-header h2 {
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.console-header > span {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  color: #aeb3aa;
+  background: #252724;
+  border: 1px solid #3b3e39;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.console-output {
+  overflow: auto;
+  padding: 14px;
+}
+
+.console-empty {
+  display: grid;
+  min-height: 45vh;
+  place-content: center;
+  color: #888d84;
+  text-align: center;
+}
+
+.console-empty span {
+  color: #aeb4aa;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 28px;
+}
+
+.console-empty p {
+  max-width: 230px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.console-entry {
+  margin-bottom: 14px;
+  overflow: hidden;
+  background: #20221f;
+  border: 1px solid #363934;
+  border-radius: 10px;
+}
+
+.console-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-bottom: 1px solid #343732;
+  font-size: 10px;
+}
+
+.console-entry-meta strong {
+  color: #d8dcd4;
+  font-size: 11px;
+}
+
+.console-entry-meta time {
+  margin-left: auto;
+  color: #777c74;
+}
+
+.console-status {
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.console-status-success {
+  color: #9fe3b2;
+  background: rgba(64, 160, 91, 0.14);
+}
+
+.console-status-error {
+  color: #ffaaa3;
+  background: rgba(213, 74, 65, 0.15);
+}
+
+.console-prompt {
+  overflow: hidden;
+  margin: 0;
+  padding: 9px 11px 0;
+  color: #b7bbb3;
+  font-size: 11px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.console-entry pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: 10px 11px 12px;
+  color: #d6dbd2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre;
 }
 
 .mobile-chat-nav {
@@ -737,7 +881,7 @@ textarea {
 
 .chat-composer {
   position: fixed;
-  right: 0;
+  right: var(--console-width);
   bottom: 0;
   left: 280px;
   z-index: 20;
@@ -787,6 +931,18 @@ textarea {
   .hero {
     min-height: calc(100vh - 106px);
     padding-top: clamp(58px, 14vh, 130px);
+  }
+
+  .chat-shell {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .openrouter-console {
+    display: none;
+  }
+
+  .chat-composer {
+    right: 0;
   }
 
 }

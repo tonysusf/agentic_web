@@ -91,7 +91,10 @@ export async function POST(request: Request) {
 
   if (!response.ok) {
     return NextResponse.json(
-      { error: data?.error?.message || "OpenRouter request failed." },
+      {
+        error: data?.error?.message || "OpenRouter request failed.",
+        openRouterResponse: data
+      },
       { status: response.status }
     );
   }
@@ -117,6 +120,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     prompt,
-    result
+    result,
+    openRouterResponse: data
   });
 }
