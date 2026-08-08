@@ -105,6 +105,19 @@ export async function getMessages(sessionId: string): Promise<StoredMessage[]> {
   }));
 }
 
+export async function deleteMessages(sessionId: string) {
+  await ensureChatSchema();
+
+  const sql = getSql();
+  const rows = (await sql`
+    DELETE FROM chat_messages
+    WHERE session_id = ${sessionId}
+    RETURNING id
+  `) as Array<{ id: string }>;
+
+  return rows.length;
+}
+
 export async function getRecentMessages(sessionId: string, limit: number): Promise<StoredMessage[]> {
   if (limit <= 0) {
     return [];

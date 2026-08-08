@@ -496,6 +496,31 @@ textarea {
   margin-top: 1px;
 }
 
+.delete-chat-button {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  color: #9a3933;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.delete-chat-button:hover:not(:disabled) {
+  color: #842d28;
+  background: #f5dfdc;
+  border-color: #edcfca;
+}
+
+.delete-chat-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .chat-main {
   display: grid;
   min-height: 100vh;

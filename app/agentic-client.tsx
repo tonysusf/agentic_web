@@ -7,7 +7,8 @@ import {
   Library,
   Plus,
   Search,
-  Sparkles
+  Sparkles,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { MarkdownText } from "./components/markdown-text";
@@ -102,6 +103,17 @@ async function loadHistory(sessionId: string) {
   }
 
   return (await response.json()) as HistoryResponse;
+}
+
+async function deleteHistory(sessionId: string) {
+  const response = await fetch(`/api/history?sessionId=${encodeURIComponent(sessionId)}`, {
+    method: "DELETE"
+  });
+  const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Could not delete chat history.");
+  }
 }
 
 function AgenticMark() {
@@ -213,6 +225,7 @@ export default function AgenticClient({
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
   const [sessionId, setSessionId] = useState("");
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
@@ -342,6 +355,36 @@ export default function AgenticClient({
     setSessionId(currentSessionId);
   }
 
+  async function handleDeleteChat() {
+    if (messages.length === 0 || isSubmitting || isDeleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this chat permanently? This removes its messages from Agentic Lite."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError("");
+
+    try {
+      const currentSessionId = sessionId || getOrCreateSessionId();
+      await deleteHistory(currentSessionId);
+      conversationRef.current += 1;
+      setMessages([]);
+      setConsoleEntries([]);
+      setPrompt("");
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Could not delete chat history.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   const composer = (
     <form className="composer" aria-label="Task prompt" onSubmit={handleSubmit} ref={formRef}>
       <label className="sr-only" htmlFor="task">
@@ -374,6 +417,9 @@ export default function AgenticClient({
         <aside className="chat-sidebar" aria-label="Workspace navigation">
           <SidebarContent
             currentTask={messages[0]?.content || "Current task"}
+            deleteDisabled={messages.length === 0 || isSubmitting || isDeleting}
+            isDeleting={isDeleting}
+            onDeleteChat={handleDeleteChat}
             onNewTask={handleNewTask}
           />
         </aside>
@@ -396,6 +442,9 @@ export default function AgenticClient({
           <div className="mobile-chat-nav">
             <SidebarContent
               currentTask={messages[0]?.content || "Current task"}
+              deleteDisabled={messages.length === 0 || isSubmitting || isDeleting}
+              isDeleting={isDeleting}
+              onDeleteChat={handleDeleteChat}
               onNewTask={handleNewTask}
             />
           </div>
@@ -503,9 +552,15 @@ export default function AgenticClient({
 
 function SidebarContent({
   currentTask,
+  deleteDisabled,
+  isDeleting,
+  onDeleteChat,
   onNewTask
 }: {
   currentTask: string;
+  deleteDisabled: boolean;
+  isDeleting: boolean;
+  onDeleteChat: () => void;
   onNewTask: () => void;
 }) {
   return (
@@ -534,6 +589,15 @@ function SidebarContent({
         <button type="button" className="active-task">
           <AgenticMark />
           <span>{currentTask}</span>
+        </button>
+        <button
+          type="button"
+          className="delete-chat-button"
+          disabled={deleteDisabled}
+          onClick={onDeleteChat}
+        >
+          <Trash2 size={16} />
+          <span>{isDeleting ? "Deleting…" : "Delete current chat"}</span>
         </button>
       </div>
     </>
