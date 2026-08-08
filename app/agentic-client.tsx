@@ -16,6 +16,10 @@ type ApiResponse = {
   result: string;
 };
 
+type ApiErrorResponse = {
+  error?: string;
+};
+
 type Message = {
   id: string;
   role: "user" | "assistant";
@@ -59,7 +63,8 @@ async function submitPrompt(prompt: string, sessionId: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Agentic Lite could not process that prompt.");
+    const data = (await response.json().catch(() => null)) as ApiErrorResponse | null;
+    throw new Error(data?.error || "Agentic Lite could not process that prompt.");
   }
 
   return (await response.json()) as ApiResponse;
