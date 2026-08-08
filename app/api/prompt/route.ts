@@ -16,8 +16,8 @@ type OpenRouterResponse = {
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 function getDailyQuestionLimit() {
-  const configuredLimit = Number.parseInt(process.env.CHAT_DAILY_QUESTION_LIMIT || "8", 10);
-  return Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : 8;
+  const configuredLimit = Number.parseInt(process.env.CHAT_DAILY_QUESTION_LIMIT || "10", 10);
+  return Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : 10;
 }
 
 export async function POST(request: Request) {

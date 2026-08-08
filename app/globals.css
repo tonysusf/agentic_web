@@ -524,18 +524,8 @@ textarea {
   border-bottom: 1px solid #343632;
 }
 
-.console-header p,
 .console-header h2 {
   margin: 0;
-}
-
-.console-header p {
-  margin-bottom: 3px;
-  color: #8f948b;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .console-header h2 {

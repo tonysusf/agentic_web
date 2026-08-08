@@ -24,6 +24,7 @@ type ApiErrorResponse = {
 
 type ConsoleEntry = {
   id: string;
+  callNumber: number;
   prompt: string;
   status: "success" | "error";
   timestamp: string;
@@ -125,10 +126,7 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
   return (
     <aside className="openrouter-console" aria-label="OpenRouter response console">
       <header className="console-header">
-        <div>
-          <p>Developer console</p>
-          <h2>OpenRouter JSON</h2>
-        </div>
+        <h2>LLM log console</h2>
         <span>{entries.length} calls</span>
       </header>
 
@@ -139,10 +137,10 @@ function OpenRouterConsole({ entries }: { entries: ConsoleEntry[] }) {
             <p>Responses will appear here after you send a prompt.</p>
           </div>
         ) : (
-          entries.map((entry, index) => (
+          entries.map((entry) => (
             <article className="console-entry" key={entry.id}>
               <div className="console-entry-meta">
-                <strong>Call {index + 1}</strong>
+                <strong>Call {entry.callNumber}</strong>
                 <span className={`console-status console-status-${entry.status}`}>
                   {entry.status}
                 </span>
@@ -282,14 +280,15 @@ export default function AgenticClient({
         return;
       }
       setConsoleEntries((currentEntries) => [
-        ...currentEntries,
         {
           id: crypto.randomUUID(),
+          callNumber: currentEntries.length + 1,
           prompt: trimmedPrompt,
           status: "success",
           timestamp: new Date().toISOString(),
           payload: data.openRouterResponse
-        }
+        },
+        ...currentEntries
       ]);
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
@@ -304,14 +303,15 @@ export default function AgenticClient({
       if (conversationRef.current === conversationId) {
         if (caughtError instanceof PromptApiError) {
           setConsoleEntries((currentEntries) => [
-            ...currentEntries,
             {
               id: crypto.randomUUID(),
+              callNumber: currentEntries.length + 1,
               prompt: trimmedPrompt,
               status: "error",
               timestamp: new Date().toISOString(),
               payload: caughtError.payload
-            }
+            },
+            ...currentEntries
           ]);
         }
         setError(caughtError instanceof Error ? caughtError.message : "Something went wrong.");
