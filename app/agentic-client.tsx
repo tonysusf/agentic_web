@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Copy,
   Library,
+  LogOut,
   PanelRight,
   Plus,
   Search,
@@ -573,6 +574,28 @@ export default function AgenticClient({
     setSessionId(currentSessionId);
   }
 
+  function handleSignOut() {
+    conversationRef.current += 1;
+    const nextSessionId = crypto.randomUUID();
+
+    try {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, nextSessionId);
+      window.localStorage.removeItem(CONSOLE_STORAGE_KEY);
+    } catch {
+      // The fresh in-memory session still works if browser storage is unavailable.
+    }
+
+    setSessionId(nextSessionId);
+    setMessages([]);
+    setConsoleEntries([]);
+    setPrompt("");
+    setError("");
+    setIsSubmitting(false);
+    setIsDeleting(false);
+    setIsChatOpen(true);
+    window.history.pushState(null, "", "/chat");
+  }
+
   async function handleDeleteChat() {
     if (messages.length === 0 || isSubmitting || isDeleting) {
       return;
@@ -649,6 +672,7 @@ export default function AgenticClient({
             isDeleting={isDeleting}
             onDeleteChat={handleDeleteChat}
             onNewTask={handleNewTask}
+            onSignOut={handleSignOut}
           />
         </aside>
 
@@ -686,6 +710,7 @@ export default function AgenticClient({
               isDeleting={isDeleting}
               onDeleteChat={handleDeleteChat}
               onNewTask={handleNewTask}
+              onSignOut={handleSignOut}
             />
           </div>
 
@@ -816,13 +841,15 @@ function SidebarContent({
   deleteDisabled,
   isDeleting,
   onDeleteChat,
-  onNewTask
+  onNewTask,
+  onSignOut
 }: {
   currentTask: string;
   deleteDisabled: boolean;
   isDeleting: boolean;
   onDeleteChat: () => void;
   onNewTask: () => void;
+  onSignOut: () => void;
 }) {
   return (
     <>
@@ -862,7 +889,13 @@ function SidebarContent({
         </button>
       </div>
 
-      <p className="sidebar-credit">Built by Tony Su</p>
+      <div className="sidebar-footer">
+        <button type="button" className="sign-out-button" onClick={onSignOut}>
+          <LogOut size={16} />
+          <span>Sign out</span>
+        </button>
+        <p className="sidebar-credit">Built by Tony Su</p>
+      </div>
     </>
   );
 }
