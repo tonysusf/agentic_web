@@ -1,6 +1,10 @@
 # Agentic Web
 
-Static Next.js proof of concept for `http://agentic.im996.com/`.
+Agentic Web is a Next.js AI demo project for exploring agentic AI concepts and modern LLM application patterns. It demonstrates selectable chat and embedding models through OpenRouter, database-backed conversation history, configurable context windows, usage limits, and a lightweight interface for inspecting model responses.
+
+The project is intended as a practical learning and portfolio demo rather than a production-ready AI agent. It provides a foundation for experimenting with tool use, embedding generation, semantic search, and vector or embedding database integrations.
+
+Live demo: `https://agentic.im996.com/`.
 
 ## Local development
 
