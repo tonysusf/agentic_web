@@ -1,24 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, isAdminSessionValid } from "../../lib/admin-auth";
 import { getMessages, listSessions } from "../../lib/chat-store";
 
-const ADMIN_USER = "admin";
-const ADMIN_PASSWORD = "admin";
-
-function isAuthorized(request: Request) {
-  return (
-    request.headers.get("x-admin-user") === ADMIN_USER &&
-    request.headers.get("x-admin-password") === ADMIN_PASSWORD
-  );
-}
-
-export async function GET(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  const sessionId = new URL(request.url).searchParams.get("sessionId")?.trim();
-
+export async function GET(request: NextRequest) {
   try {
+    const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value || "";
+
+    if (!(await isAdminSessionValid(token))) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const sessionId = request.nextUrl.searchParams.get("sessionId")?.trim();
+
     if (sessionId) {
       const messages = await getMessages(sessionId);
       return NextResponse.json({ messages });
@@ -27,8 +20,9 @@ export async function GET(request: Request) {
     const sessions = await listSessions();
     return NextResponse.json({ sessions });
   } catch (error) {
+    console.error("Could not load admin data.", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not load admin data." },
+      { error: "Could not load admin data." },
       { status: 500 }
     );
   }

@@ -18,17 +18,6 @@ type AdminMessage = {
   createdAt: string;
 };
 
-const ADMIN_USER = "admin";
-const ADMIN_PASSWORD = "admin";
-const ADMIN_SESSION_KEY = "agentic-lite-admin-session";
-
-function getAdminHeaders(username: string, password: string) {
-  return {
-    "x-admin-user": username,
-    "x-admin-password": password
-  };
-}
-
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -38,15 +27,14 @@ export default function AdminPage() {
   const [selectedSessionId, setSelectedSessionId] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  async function loadSessions(credentials = { username, password }) {
+  async function loadSessions() {
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await fetch("/api/admin", {
-        headers: getAdminHeaders(credentials.username, credentials.password)
-      });
+      const response = await fetch("/api/admin");
       const data = (await response.json()) as { sessions?: AdminSession[]; error?: string };
 
       if (!response.ok) {
@@ -56,50 +44,69 @@ export default function AdminPage() {
       setSessions(data.sessions || []);
       setSelectedSessionId("");
       setMessages([]);
+      return true;
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not load sessions.");
-      window.localStorage.removeItem(ADMIN_SESSION_KEY);
       setIsLoggedIn(false);
+      return false;
     } finally {
       setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    window.setTimeout(() => {
-      const savedSession = window.localStorage.getItem(ADMIN_SESSION_KEY);
-
-      if (!savedSession) {
-        return;
-      }
-
-      try {
-        const credentials = JSON.parse(savedSession) as { username?: string; password?: string };
-
-        if (credentials.username === ADMIN_USER && credentials.password === ADMIN_PASSWORD) {
-          setUsername(credentials.username);
-          setPassword(credentials.password);
-          setIsLoggedIn(true);
-          void loadSessions({ username: credentials.username, password: credentials.password });
-        }
-      } catch {
-        window.localStorage.removeItem(ADMIN_SESSION_KEY);
-      }
+    const timeoutId = window.setTimeout(() => {
+      void loadSessions()
+        .then((isAuthenticated) => setIsLoggedIn(isAuthenticated))
+        .finally(() => setIsCheckingSession(false));
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (username !== ADMIN_USER || password !== ADMIN_PASSWORD) {
-      setError("Invalid admin credentials.");
-      return;
-    }
+    setIsLoading(true);
+    setError("");
 
-    setIsLoggedIn(true);
-    window.localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ username, password }));
-    await loadSessions();
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Could not sign in.");
+      }
+
+      setPassword("");
+      setIsLoggedIn(await loadSessions());
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Could not sign in.");
+      setIsLoggedIn(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    setIsLoading(true);
+
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } finally {
+      setUsername("");
+      setPassword("");
+      setSessions([]);
+      setMessages([]);
+      setSelectedSessionId("");
+      setError("");
+      setIsLoggedIn(false);
+      setIsLoading(false);
+    }
   }
 
   async function selectSession(sessionId: string) {
@@ -108,12 +115,14 @@ export default function AdminPage() {
     setError("");
 
     try {
-      const response = await fetch(`/api/admin?sessionId=${encodeURIComponent(sessionId)}`, {
-        headers: getAdminHeaders(username, password)
-      });
+      const response = await fetch(`/api/admin?sessionId=${encodeURIComponent(sessionId)}`);
       const data = (await response.json()) as { messages?: AdminMessage[]; error?: string };
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setIsLoggedIn(false);
+        }
+
         throw new Error(data.error || "Could not load messages.");
       }
 
@@ -123,6 +132,14 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <main className="admin-login-shell">
+        <p className="admin-muted">Checking admin session…</p>
+      </main>
+    );
   }
 
   if (!isLoggedIn) {
@@ -139,7 +156,9 @@ export default function AdminPage() {
             <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
           </label>
           {error ? <p className="admin-error">{error}</p> : null}
-          <button type="submit">Sign in</button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? "Signing in…" : "Sign in"}
+          </button>
         </form>
       </main>
     );
@@ -152,9 +171,14 @@ export default function AdminPage() {
           <h1>Chat History</h1>
           <p>Viewing saved chat messages by browser session.</p>
         </div>
-        <button type="button" onClick={() => loadSessions()} disabled={isLoading}>
-          Refresh
-        </button>
+        <div className="admin-header-actions">
+          <button type="button" onClick={() => loadSessions()} disabled={isLoading}>
+            Refresh
+          </button>
+          <button type="button" onClick={() => void handleLogout()} disabled={isLoading}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       {error ? <p className="admin-error">{error}</p> : null}

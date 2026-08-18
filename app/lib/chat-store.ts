@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { getSql } from "./database";
 
 export type StoredMessage = {
   id: string;
@@ -33,16 +33,6 @@ type ChatSessionRow = {
 const CHAT_HISTORY_RETENTION_DAYS = 1;
 
 let didEnsureSchema = false;
-
-function getSql() {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (!databaseUrl) {
-    throw new Error("Missing DATABASE_URL environment variable.");
-  }
-
-  return neon(databaseUrl);
-}
 
 export async function ensureChatSchema() {
   if (didEnsureSchema) {

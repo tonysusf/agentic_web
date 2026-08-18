@@ -27,5 +27,9 @@ CHAT_DAILY_QUESTION_LIMIT=10
 CHAT_CONTEXT_WINDOW_LENGTH=4
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
-OPENROUTER_SITE_URL=http://agentic.im996.com
+OPENROUTER_SITE_URL=https://agentic.im996.com
+ADMIN_INITIAL_USERNAME=admin
+ADMIN_INITIAL_PASSWORD=...
 ```
+
+The initial admin credentials are used only when the `admin_users` table is empty. Production requires a password of at least 12 characters. After the first administrator is created, authentication uses the salted password hash stored in the database. Local development falls back to `admin` / `su` when the two admin variables are omitted.
